@@ -1,0 +1,31 @@
+{
+  "name": "moses",
+  "id": "moses",
+  "version": "0.1.0",
+  "description": "Moses Statistical Machine Translation (SMT) library for Node.js",
+  "keywords": [
+    "moses",
+    "smt",
+    "translation"
+  ],
+  "author": "Thomas Feng <tfeng@berkeley.edu>",
+  "homepage": "http://tfeng.github.io/moses",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tfeng/moses.git",
+    "web": "https://github.com/tfeng/moses"
+  },
+  "bugs": {
+    "url": "https://github.com/tfeng/moses/issues"
+  },
+  "main": "./lib/moses.js",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    }
+  ],
+  "dependencies": {
+    "bindings": "latest"
+  }
+}
