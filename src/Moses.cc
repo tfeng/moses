@@ -1,44 +1,131 @@
 #include <node.h>
+#include <uv.h>
+#include "Moses.h"
+
 #include "moses/Hypothesis.h"
 #include "moses/Manager.h"
 #include "moses/StaticData.h"
-#include "Options.h"
 
+using namespace node;
 using namespace std;
 using namespace v8;
 using namespace Moses;
 
 namespace MosesJS {
 
-Handle<Value> InitMoses(const Arguments& args) {
+extern "C" void InitModule(Handle<Object> exports) {
   HandleScope scope;
+  exports->Set(String::NewSymbol("init"), FunctionTemplate::New(MosesJS::Init)->GetFunction());
+  exports->Set(String::NewSymbol("translate"), FunctionTemplate::New(MosesJS::Translate)->GetFunction());
+}
 
-  if (args.Length() == 0 || args.Length() > 2 || !(args[0]->IsString()) || !(args[1]->IsUndefined() || args[1]->IsObject())) {
-    return ThrowException(Exception::Error(String::New("init(path [, options]) requires path to a Moses configuration file and an optional option object.")));
+Handle<Value> InitMosesUsage() {
+  HandleScope scope;
+  return ThrowException(Exception::Error(String::New("init(path [, options] [, callback]) requires path to a Moses configuration file, an optional options object, and an optional callback function.")));
+}
+
+Handle<Value> Init(const Arguments& args) {
+  HandleScope scope;
+  int numArgs = args.Length();
+
+  if (numArgs < 1 || numArgs > 3 || !args[0]->IsString()) {
+    return InitMosesUsage();
   }
+
+  if (numArgs > 1) {
+    if (args[1]->IsObject() && numArgs == 3 && !args[2]->IsFunction()) {
+      return InitMosesUsage();
+    } else if (!args[1]->IsObject() && !args[1]->IsFunction()) {
+      return InitMosesUsage();
+    } else if (args[1]->IsFunction() && numArgs > 2) {
+      return InitMosesUsage();
+    }
+  }
+
+  string configFile = *String::Utf8Value(args[0]);
+
+  Options* options;
+  if (numArgs > 1 && args[1]->IsObject()) {
+    Handle<Object> object = Handle<Object>::Cast(args[1]);
+    options = new Options(object);
+  } else {
+    options = new Options();
+  }
+
+  Persistent<Function> callback;
+  if (numArgs == 2 && args[1]->IsFunction()) {
+    callback = Persistent<Function>::New(Handle<Function>::Cast(args[1]));
+  } else if (numArgs == 3 && args[2]->IsFunction()) {
+    callback = Persistent<Function>::New(Handle<Function>::Cast(args[2]));
+  } else {
+    callback = Persistent<Function>();
+  }
+
+  uv_work_t *req = new uv_work_t;
+  InitPayload* payload = new InitPayload();
+  req->data = payload;
+  payload->configFile = configFile;
+  payload->options = options;
+  payload->callback = callback;
+
+  uv_queue_work(uv_default_loop(), req, InitSync, InitComplete);
+
+  return Undefined();
+}
+
+void InitSync(uv_work_t* req) {
+  InitPayload* payload = (InitPayload*) req->data;
 
   OptionsParameter* params = new OptionsParameter();
-  string file = *String::Utf8Value(args[0]);
-  if (!params->LoadParam(file)) {
+  if (!params->LoadParam(payload->configFile)) {
+    payload->error = "Unable to load file " + payload->configFile;
     delete params;
-    return ThrowException(Exception::Error(String::New(("Unable to load file " + file).c_str())));
+    return;
   }
 
-  Handle<Value> result;
-  if (args[1]->IsObject()) {
-    Handle<Object> object = Handle<Object>::Cast(args[1]);
-    Options options(object);
-    result = options.OverwriteParams(*params);
+  string result = payload->options->OverwriteParams(*params);
+  if (!result.empty()) {
+    payload->error = result;
+    delete params;
+    return;
+  }
+
+  try {
+    StaticData::InstanceNonConst().LoadData(params);
+  } catch (...) {
+    payload->error = "Unable to load static data.";
+  }
+
+  delete params;
+}
+
+void InitComplete(uv_work_t* req, int status) {
+  HandleScope scope;
+
+  InitPayload* payload = (InitPayload*) req->data;
+
+  Handle<Value> err;
+  if (payload->error.empty()) {
+    err = Undefined();
   } else {
-    Options options;
-    result = options.OverwriteParams(*params);
-  }
-  if (!result.IsEmpty()) {
-    return result;
+    err = String::New(payload->error.c_str());
   }
 
-  StaticData::InstanceNonConst().LoadData(params);
-  return scope.Close(Boolean::New(true));
+  TryCatch try_catch;
+  if (!payload->callback.IsEmpty()) {
+    Handle<Value> argv[1];
+    argv[0] = err;
+    payload->callback->Call(Context::GetCurrent()->Global(), 1, argv);
+  }
+
+  payload->callback.Dispose();
+  delete payload->options;
+  delete payload;
+  delete req;
+
+  if(try_catch.HasCaught()) {
+    FatalException(try_catch);
+  }
 }
 
 Handle<Value> Translate(const Arguments& args) {
@@ -75,14 +162,4 @@ Handle<Value> Translate(const Arguments& args) {
 
 }
 
-void Init(Handle<Object> exports) {
-  HandleScope scope;
-  exports->Set(String::NewSymbol("init"), FunctionTemplate::New(MosesJS::InitMoses)->GetFunction());
-  exports->Set(String::NewSymbol("translate"), FunctionTemplate::New(MosesJS::Translate)->GetFunction());
-}
-
-extern "C" void InitAll(Handle<Object> exports) {
-  Init(exports);
-}
-
-NODE_MODULE(Moses, InitAll)
+NODE_MODULE(Moses, MosesJS::InitModule)

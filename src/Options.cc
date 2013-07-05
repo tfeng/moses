@@ -4,6 +4,8 @@ using namespace std;
 using namespace v8;
 using namespace Moses;
 
+namespace MosesJS {
+
 Options::Options() {
   InitDefaults();
 }
@@ -19,22 +21,23 @@ Options::Options(Handle<Object> initObject) {
   }
 }
 
-Handle<Value> Options::OverwriteParams(OptionsParameter& params) {
-  HandleScope scope;
+string Options::OverwriteParams(OptionsParameter& params) {
   map<string, string>::const_iterator it = options.begin();
   vector<string> value;
   while (it != options.end()) {
     pair<string, string> pair = *it++;
     if (!params.IsValid(pair.first)) {
-      return ThrowException(Exception::Error(String::New(("Option name \"" + pair.first + "\" is not supported.").c_str())));
+      return "Option name \"" + pair.first + "\" is not supported.";
     }
     value.clear();
     value.push_back(pair.second);
     params.OverwriteParam(pair.first, value);
   }
-  return scope.Close(Local<Value>());
+  return "";
 }
 
 void Options::InitDefaults() {
   options["verbose"] = "0";
+}
+
 }
