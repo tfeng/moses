@@ -1,0 +1,529 @@
+diff --git a/moses-cmd/Main.cpp b/moses-cmd/Main.cpp
+index a7f63eb..ec8d408 100644
+--- a/moses-cmd/Main.cpp
++++ b/moses-cmd/Main.cpp
+@@ -46,6 +46,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ #include "moses/Timer.h"
+ #include "moses/ThreadPool.h"
+ #include "moses/OutputCollector.h"
++#include "moses/ThreadedStatic.h"
+ 
+ #ifdef HAVE_PROTOBUF
+ #include "hypergraph.pb.h"
+@@ -368,6 +369,8 @@ static void ShowWeights()
+ /** main function of the command line version of the decoder **/
+ int main(int argc, char** argv)
+ {
++  ThreadedStaticMode::SetThreadedMode(false);
++
+   try {
+   
+ #ifdef HAVE_PROTOBUF
+diff --git a/moses/ScoreComponentCollection.cpp b/moses/ScoreComponentCollection.cpp
+index d0c1e11..8a78db3 100644
+--- a/moses/ScoreComponentCollection.cpp
++++ b/moses/ScoreComponentCollection.cpp
+@@ -9,8 +9,8 @@ using namespace std;
+ namespace Moses
+ {
+ 
+-ScoreComponentCollection::ScoreIndexMap ScoreComponentCollection::s_scoreIndexes;
+-size_t ScoreComponentCollection::s_denseVectorSize = 0;
++ThreadedStatic<ScoreComponentCollection::ScoreIndexMap> ScoreComponentCollection::s_scoreIndexes;
++ThreadedStatic<size_t> ScoreComponentCollection::s_denseVectorSize;
+ 
+ ScoreComponentCollection::ScoreComponentCollection() : m_scores(s_denseVectorSize)
+ {}
+@@ -23,17 +23,17 @@ void ScoreComponentCollection::RegisterScoreProducer
+   size_t start = s_denseVectorSize;
+   size_t end = start + scoreProducer->GetNumScoreComponents();
+   VERBOSE(1, "ScoreProducer: " << scoreProducer->GetScoreProducerDescription() << " start: " << start << " end: " << end << endl);
+-  s_scoreIndexes[scoreProducer] = pair<size_t,size_t>(start,end);
+-  s_denseVectorSize = end;
++  (*s_scoreIndexes)[scoreProducer] = pair<size_t,size_t>(start,end);
++  *s_denseVectorSize = end;
+ }
+ 
+ void ScoreComponentCollection::UnregisterScoreProducer
+   (const ScoreProducer* scoreProducer) 
+ {
+   CHECK(scoreProducer->GetNumScoreComponents() != ScoreProducer::unlimited);
+-  ScoreIndexMap::iterator iter = s_scoreIndexes.find(scoreProducer);
+-  CHECK(iter != s_scoreIndexes.end());
+-  s_scoreIndexes.erase(iter);
++  ScoreIndexMap::iterator iter = s_scoreIndexes->find(scoreProducer);
++  CHECK(iter != s_scoreIndexes->end());
++  s_scoreIndexes->erase(iter);
+ }
+ 
+ float ScoreComponentCollection::GetWeightedScore() const
+@@ -154,8 +154,8 @@ void ScoreComponentCollection::SparseL2Regularize(float lambda) {
+ }
+ 
+ void ScoreComponentCollection::Save(ostream& out) const {
+-  ScoreIndexMap::const_iterator iter = s_scoreIndexes.begin();
+-  for (; iter != s_scoreIndexes.end(); ++iter ) {
++  ScoreIndexMap::const_iterator iter = s_scoreIndexes->begin();
++  for (; iter != s_scoreIndexes->end(); ++iter ) {
+     string name = iter->first->GetScoreProducerDescription();
+     IndexPair ip = iter->second; // feature indices
+     if (ip.second-ip.first == 1) {
+diff --git a/moses/ScoreComponentCollection.h b/moses/ScoreComponentCollection.h
+index be23e03..9540fc3 100644
+--- a/moses/ScoreComponentCollection.h
++++ b/moses/ScoreComponentCollection.h
+@@ -37,6 +37,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ #include "FeatureVector.h"
+ #include "TypeDef.h"
+ #include "Util.h"
++#include "ThreadedStatic.h"
+ 
+ 
+ namespace Moses
+@@ -66,14 +67,16 @@ class ScoreComponentCollection
+   friend std::ostream& operator<<(std::ostream& os, const ScoreComponentCollection& rhs);
+ private:
+ 	FVector m_scores;
++public:
+   typedef std::pair<size_t,size_t> IndexPair;
+   typedef std::map<const ScoreProducer*,IndexPair> ScoreIndexMap;
+-  static  ScoreIndexMap s_scoreIndexes;
+-  static size_t s_denseVectorSize;
++private:
++  static ThreadedStatic<ScoreIndexMap> s_scoreIndexes;
++  static ThreadedStatic<size_t> s_denseVectorSize;
+   static IndexPair GetIndexes(const ScoreProducer* sp) 
+   {
+-    ScoreIndexMap::const_iterator indexIter = s_scoreIndexes.find(sp);
+-    if (indexIter == s_scoreIndexes.end()) {
++    ScoreIndexMap::const_iterator indexIter = s_scoreIndexes->find(sp);
++    if (indexIter == s_scoreIndexes->end()) {
+       std::cerr << "ERROR: ScoreProducer: " << sp->GetScoreProducerDescription() <<
+         " not registered with ScoreIndexMap" << std::endl;
+       std::cerr << "You must call ScoreComponentCollection.RegisterScoreProducer() " <<
+@@ -85,7 +88,7 @@ private:
+ 
+ public:
+   static void ResetCounter() {
+-    s_denseVectorSize = 0;
++    *s_denseVectorSize = 0;
+   }
+ 
+   //! Create a new score collection with all values set to 0.0
+@@ -430,6 +433,14 @@ public:
+ 		
+ #endif
+ 
++public:
++  inline static ThreadedStatic<ScoreIndexMap>& GetThreadedScoreIndexes() {
++    return s_scoreIndexes;
++  }
++
++  inline static ThreadedStatic<size_t>& GetThreadedDenseVectorSize() {
++    return s_denseVectorSize;
++  }
+ };
+ 
+ struct SCCPlus {
+diff --git a/moses/ScoreProducer.cpp b/moses/ScoreProducer.cpp
+index 0782312..bc40078 100644
+--- a/moses/ScoreProducer.cpp
++++ b/moses/ScoreProducer.cpp
+@@ -11,14 +11,14 @@ using namespace std;
+ namespace Moses
+ {
+ 
+-multiset<string> ScoreProducer::description_counts;
++ThreadedStatic< multiset<string> > ScoreProducer::description_counts;
+ const size_t ScoreProducer::unlimited = -1;
+ 
+ ScoreProducer::ScoreProducer(const std::string& description, size_t numScoreComponents)
+   : m_reportSparseFeatures(false), m_numScoreComponents(numScoreComponents)
+ {
+-  description_counts.insert(description);
+-  size_t count = description_counts.count(description);
++  description_counts->insert(description);
++  size_t count = description_counts->count(description);
+   ostringstream dstream;
+   dstream << description;
+   if (count > 1) 
+diff --git a/moses/ScoreProducer.h b/moses/ScoreProducer.h
+index c88e5ef..ceeae8a 100644
+--- a/moses/ScoreProducer.h
++++ b/moses/ScoreProducer.h
+@@ -8,6 +8,7 @@
+ #include <vector>
+ 
+ #include "FeatureVector.h"
++#include "ThreadedStatic.h"
+ 
+ namespace Moses
+ {
+@@ -23,7 +24,7 @@ private:
+   bool m_reportSparseFeatures;
+   size_t m_numScoreComponents;
+   //In case there's multiple producers with the same description
+-  static std::multiset<std::string> description_counts;
++  static ThreadedStatic< std::multiset<std::string> > description_counts;
+ 	ScoreProducer(const ScoreProducer&);  // don't implement
+ 	
+ protected:
+@@ -35,7 +36,7 @@ public:
+   static const size_t unlimited;
+ 
+   static void ResetDescriptionCounts() {
+-    description_counts.clear();
++    description_counts->clear();
+   }
+ 
+ 	//! returns the number of scores that a subclass produces.
+@@ -60,6 +61,10 @@ public:
+   bool GetSparseFeatureReporting() const { return m_reportSparseFeatures; } 
+ 
+   virtual float GetSparseProducerWeight() const { return 1; }
++
++  static inline ThreadedStatic< std::multiset<std::string> >& GetThreadedDescriptionCounts() {
++    return description_counts;
++  }
+ };
+ 
+ 
+diff --git a/moses/StaticData.cpp b/moses/StaticData.cpp
+index 2b6f301..5b0e6b2 100644
+--- a/moses/StaticData.cpp
++++ b/moses/StaticData.cpp
+@@ -83,7 +83,7 @@ static size_t CalcMax(size_t x, const vector<size_t>& y, const vector<size_t>& z
+   return max;
+ }
+ 
+-StaticData StaticData::s_instance;
++ThreadedStatic<StaticData> StaticData::s_instance = ThreadedStatic<StaticData>();
+ 
+ StaticData::StaticData()
+   :m_targetBigramFeature(NULL)
+@@ -115,8 +115,8 @@ StaticData::StaticData()
+ }
+ 
+ bool StaticData::LoadDataStatic(Parameter *parameter, const std::string &execPath) {
+-  s_instance.SetExecPath(execPath);
+-  return s_instance.LoadData(parameter);
++  s_instance->SetExecPath(execPath);
++  return s_instance->LoadData(parameter);
+ }
+ 
+ bool StaticData::LoadData(Parameter *parameter)
+diff --git a/moses/StaticData.h b/moses/StaticData.h
+index 448f1a4..8c3b1ce 100644
+--- a/moses/StaticData.h
++++ b/moses/StaticData.h
+@@ -46,6 +46,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ #include "TranslationOptionList.h"
+ #include "TranslationSystem.h"
+ #include "ScoreComponentCollection.h"
++#include "ThreadedStatic.h"
+ 
+ namespace Moses
+ {
+@@ -85,7 +86,7 @@ typedef std::vector<UnknownLHSEntry>  UnknownLHSList;
+ class StaticData
+ {
+ private:
+-  static StaticData									s_instance;
++  static ThreadedStatic<StaticData>									s_instance;
+ protected:
+ 
+   std::map<long,Phrase> m_constraints;
+@@ -300,6 +301,10 @@ public:
+     return s_instance;
+   }
+ 
++  static ThreadedStatic<StaticData>& GetThreadedInstance() {
++    return s_instance;
++  }
++
+   /** delete current static instance and replace with another.
+   	* Used by gui front end
+   	*/
+@@ -733,6 +738,8 @@ public:
+     return m_nBestIncludesSegmentation;
+   }
+ 
++  friend class ThreadedStatic<StaticData>;
++
+ };
+ 
+ }
+diff --git a/moses/ThreadedStatic.cpp b/moses/ThreadedStatic.cpp
+new file mode 100644
+index 0000000..ed1a54d
+--- /dev/null
++++ b/moses/ThreadedStatic.cpp
+@@ -0,0 +1,165 @@
++#include "ScoreComponentCollection.h"
++#include "StaticData.h"
++#include "ThreadedStatic.h"
++#include "Util.h"
++
++using namespace std;
++
++namespace Moses {
++
++bool ThreadedStaticMode::threadedMode = true;
++
++bool ThreadedStaticMode::GetThreadedMode() {
++  return threadedMode;
++}
++
++void ThreadedStaticMode::SetThreadedMode(bool threadedMode) {
++  ThreadedStaticMode::threadedMode = threadedMode;
++}
++
++void ThreadedStaticHelper::AddStorage(map<ThreadIdType, void*>* storage) {
++  pthread_mutex_lock(&mutex);
++  GetStorages().insert(storage);
++  pthread_mutex_unlock(&mutex);
++}
++
++void ThreadedStaticHelper::RemoveStorage(map<ThreadIdType, void*>* storage) {
++  pthread_mutex_lock(&mutex);
++  GetStorages().erase(storage);
++  pthread_mutex_unlock(&mutex);
++}
++
++void ThreadedStaticHelper::SetDestructor(map<ThreadIdType, void*>* storage, ThreadDataDestructor destructor) {
++  GetDestructors()[storage] = destructor;
++}
++
++ThreadIdType ThreadedStaticHelper::GetThreadId() {
++  return ThreadedStaticMode::GetThreadedMode() ? pthread_self() : defaultId;
++}
++
++ThreadDataType ThreadedStaticHelper::GetThreadData(ThreadIdType threadId) {
++  ThreadDataType result;
++  pthread_mutex_lock(&mutex);
++  set< map<ThreadIdType, void*>* >::const_iterator it = GetStorages().begin();
++  while (it != GetStorages().end()) {
++    map<ThreadIdType, void*>* m = *it++;
++    map<ThreadIdType, void*>::const_iterator pos = m->find(threadId);
++    if (pos != m->end()) {
++      result[m] = pos->second;
++    }
++  }
++  pthread_mutex_unlock(&mutex);
++  return result;
++}
++
++void ThreadedStaticHelper::RemoveThreadData(ThreadIdType threadId) {
++  pthread_mutex_lock(&mutex);
++  set< map<ThreadIdType, void*>* >::iterator it = GetStorages().begin();
++  while (it != GetStorages().end()) {
++    (*it++)->erase(threadId);
++  }
++  pthread_mutex_unlock(&mutex);
++}
++
++void ThreadedStaticHelper::SetThreadData(ThreadIdType threadId, const ThreadDataType& threadData) {
++  pthread_mutex_lock(&mutex);
++  set< map<ThreadIdType, void*>* >::iterator it = GetStorages().begin();
++  while (it != GetStorages().end()) {
++    map<ThreadIdType, void*>* m = *it++;
++    ThreadDataType::const_iterator pos = threadData.find(m);
++    if (pos == threadData.end()) {
++      m->erase(threadId);
++    } else {
++      (*m)[threadId] = pos->second;
++    }
++  }
++  pthread_mutex_unlock(&mutex);
++}
++
++void ThreadedStaticHelper::DestroyThreadData(ThreadDataType& threadData) {
++  pthread_mutex_lock(&mutex);
++  ThreadDataType::iterator it = threadData.begin();
++  while (it != threadData.end()) {
++    map<ThreadIdType, void*>* m = it->first;
++    void* data = (it++)->second;
++    map<ThreadIdType, void*>::iterator mIt = m->begin();
++    while (mIt != m->end()) {
++      if (mIt->second == data) {
++        m->erase(mIt);
++        break;
++      } else {
++        mIt++;
++      }
++    }
++
++    ThreadDataDestructor destructor = GetDestructors()[m];
++    // FIXME: Check for null?
++    destructor(data);
++  }
++  threadData.clear();
++  pthread_mutex_unlock(&mutex);
++}
++
++const ThreadIdType ThreadedStaticHelper::defaultId = 0;
++pthread_mutex_t ThreadedStaticHelper::mutex = PTHREAD_MUTEX_INITIALIZER;
++set< map<ThreadIdType, void*>* >* ThreadedStaticHelper::storages = NULL;
++map<map<ThreadIdType, void*>*, ThreadDataDestructor>* ThreadedStaticHelper::destructors = NULL;
++
++template <class T> ThreadedStatic<T>::ThreadedStatic() {
++  pthread_mutex_init(&mutex, NULL);
++  ThreadedStaticHelper::SetDestructor(&storage, Destroy);
++  ThreadedStaticHelper::AddStorage(&storage);
++}
++
++template <class T> ThreadedStatic<T>::~ThreadedStatic() {
++  ThreadedStaticHelper::RemoveStorage(&storage);
++  pthread_mutex_destroy(&mutex);
++}
++
++template <class T> T* ThreadedStatic<T>::Get(ThreadIdType id) {
++  if (!ThreadedStaticMode::GetThreadedMode()) {
++    id = ThreadedStaticHelper::GetThreadId(); // In this case, GetThreadId() always returns defaultId.
++  }
++
++  T* pointer;
++  pthread_mutex_lock(&mutex);
++  typename map<ThreadIdType, void*>::const_iterator it = storage.find(id);
++  if (it != storage.end() && it->second != NULL) {
++    pointer = (T*) it->second;
++  } else {
++    pointer = (T*) (storage[id] = new T());
++  }
++  pthread_mutex_unlock(&mutex);
++  return pointer;
++}
++
++template <class T> void ThreadedStatic<T>::Remove(ThreadIdType id) {
++  if (!ThreadedStaticMode::GetThreadedMode()) {
++    id = ThreadedStaticHelper::GetThreadId(); // In this case, GetThreadId() always returns defaultId.
++  }
++
++  pthread_mutex_lock(&mutex);
++  storage.erase(id);
++  pthread_mutex_unlock(&mutex);
++}
++
++template <class T> void ThreadedStatic<T>::Set(ThreadIdType id, T* pointer) {
++  if (!ThreadedStaticMode::GetThreadedMode()) {
++    id = ThreadedStaticHelper::GetThreadId(); // In this case, GetThreadId() always returns defaultId.
++  }
++
++  pthread_mutex_lock(&mutex);
++  storage[id] = pointer;
++  pthread_mutex_unlock(&mutex);
++}
++
++template <class T> void ThreadedStatic<T>::Destroy(void* pointer) {
++  delete (T*) pointer;
++}
++
++template class ThreadedStatic<ScoreComponentCollection::ScoreIndexMap>;
++template class ThreadedStatic<size_t>;
++template class ThreadedStatic<StaticData>;
++template class ThreadedStatic< multiset<string> >;
++
++}
+diff --git a/moses/ThreadedStatic.h b/moses/ThreadedStatic.h
+new file mode 100644
+index 0000000..fe27400
+--- /dev/null
++++ b/moses/ThreadedStatic.h
+@@ -0,0 +1,97 @@
++#ifndef moses_ThreadedStatic_h
++#define moses_ThreadedStatic_h
++
++#include <map>
++#include <set>
++
++using namespace std;
++
++namespace Moses {
++
++typedef pthread_t ThreadIdType;
++typedef map<map<ThreadIdType, void*>*, void*> ThreadDataType;
++typedef void (*ThreadDataDestructor)(void*);
++
++class ThreadedStaticMode {
++  public:
++    static bool GetThreadedMode();
++    static void SetThreadedMode(bool threadedMode);
++
++  private:
++    static bool threadedMode;
++};
++
++class ThreadedStaticHelper {
++public:
++  static void AddStorage(map<ThreadIdType, void*>* storage);
++  static void RemoveStorage(map<ThreadIdType, void*>* storage);
++  static void SetDestructor(map<ThreadIdType, void*>* storage, ThreadDataDestructor destructor);
++
++  static ThreadIdType GetThreadId();
++
++  inline static ThreadDataType GetThreadData() {
++    return GetThreadData(GetThreadId());
++  }
++  static ThreadDataType GetThreadData(ThreadIdType threadId);
++
++  inline static void RemoveThreadData() {
++    return RemoveThreadData(GetThreadId());
++  }
++  static void RemoveThreadData(ThreadIdType threadId);
++
++  inline static void SetThreadData(const ThreadDataType& threadData) {
++    SetThreadData(GetThreadId(), threadData);
++  }
++  static void SetThreadData(ThreadIdType threadId, const ThreadDataType& threadData);
++
++  static void DestroyThreadData(ThreadDataType& threadData);
++
++private:
++  inline static set< map<ThreadIdType, void*>* >& GetStorages() {
++    if (storages == NULL) {
++      storages = new set< map<ThreadIdType, void*>* >();
++    }
++    return *storages;
++  }
++  inline static map<map<ThreadIdType, void*>*, ThreadDataDestructor>& GetDestructors() {
++    if (destructors == NULL) {
++      destructors = new map<map<ThreadIdType, void*>*, ThreadDataDestructor>();
++    }
++    return *destructors;
++  }
++
++  static const ThreadIdType defaultId;
++  static pthread_mutex_t mutex;
++  static set< map<ThreadIdType, void*>* >* storages;
++  static map<map<ThreadIdType, void*>*, ThreadDataDestructor>* destructors;
++};
++
++template<class T> class ThreadedStatic {
++  public:
++    ThreadedStatic();
++    virtual ~ThreadedStatic();
++
++    inline operator T&() {
++      return *Get(ThreadedStaticHelper::GetThreadId());
++    }
++    T* operator->() {
++      return Get(ThreadedStaticHelper::GetThreadId());
++    }
++    T& operator*() {
++      return *Get(ThreadedStaticHelper::GetThreadId());
++    }
++
++    T* Get(ThreadIdType id);
++    void Remove(ThreadIdType id);
++    void Set(ThreadIdType id, T* pointer);
++
++  private:
++    static void Destroy(void* pointer);
++
++    pthread_mutex_t mutex;
++    map<ThreadIdType, void*> storage;
++};
++
++}
++
++#endif
