@@ -1,6 +1,4 @@
 #include <node.h>
-#include <uv.h>
-#include <iostream>
 #include "Moses.h"
 
 #include "moses/Manager.h"

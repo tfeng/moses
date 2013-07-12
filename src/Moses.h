@@ -1,7 +1,5 @@
-#include <set>
 #include <string>
 #include <node.h>
-#include <uv.h>
 #include "moses/ThreadedStatic.h"
 #include "Options.h"
 
