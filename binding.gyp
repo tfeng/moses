@@ -1,30 +1,44 @@
 {
+  "variables": {
+    "BOOST": "$(BOOST)",
+    "MOSES": "$(MOSES)",
+    "SRILM": "$(SRILM)",
+    "SRILM_LIB": "<(SRILM)/lib",
+    "MAX_NUM_FACTORS": "4",
+    "BOOST_INCLUDE": "<(BOOST)/include",
+    "BOOST_LIB": "<(BOOST)/lib",
+    "MOSES_INCLUDE": "<(MOSES)/include",
+    "MOSES_LIB": "<(MOSES)/lib"
+  },
   "targets": [
     {
       "target_name": "Moses",
       "sources": ["src/Moses.cc",
                   "src/Options.cc"],
       "conditions": [
-        ['OS=="linux"', {
-          'cflags_cc!': ['-fexceptions']
+        ["OS=='linux'", {
+          "cflags_cc!": ["-fexceptions"]
         }],
-        ['OS=="mac"', {
-          'xcode_settings': {
-            'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-            'OTHER_CFLAGS': ['-Wno-unused-private-field']
+        ["OS=='mac'", {
+          "variables": {
+            "SRILM_LIB": "<(SRILM)/lib/macosx"
           },
-          'include_dirs+': ['/opt/translation/boost/include', '/opt/translation/moses/include'],
-          'link_settings': {
-            'libraries': ['-L/opt/translation/boost/lib', '-lboost_system', '-lboost_thread',
-                          '-L/opt/translation/moses/lib', '-lmoses', '-lmert_lib', '-lmira_lib', '-lpcfg_common',
-                          '-L/opt/translation/srilm/lib/macosx', '-ldstruct', '-lflm', '-llattice', '-loolm', '-lmisc']
+          "xcode_settings": {
+            "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+            "OTHER_CFLAGS": ["-Wno-unused-private-field"]
           },
-          'defines': ['MAX_NUM_FACTORS=4', 'null=NULL']
+          "include_dirs+": ["<(BOOST_INCLUDE)", "<(MOSES_INCLUDE)"],
+          "link_settings": {
+            "libraries": ["-L<(BOOST_LIB)", "-lboost_system", "-lboost_thread",
+                          "-L<(MOSES_LIB)", "-lmoses", "-lmert_lib", "-lmira_lib", "-lpcfg_common",
+                          "-L<(SRILM_LIB)", "-ldstruct", "-lflm", "-llattice", "-loolm", "-lmisc"]
+          },
+          "defines": ["MAX_NUM_FACTORS=<(MAX_NUM_FACTORS)", "null=NULL"]
         }],
-        ['OS=="win"', {
-          'msvs_settings': {
-            'VCCLCompilerTool': {
-              'AdditionalOptions': [ '/EHsc' ]
+        ["OS=='win'", {
+          "msvs_settings": {
+            "VCCLCompilerTool": {
+              "AdditionalOptions": [ "/EHsc" ]
             }
           }
         }]
