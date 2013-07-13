@@ -26,7 +26,7 @@ $ sudo /opt/local/bin/port install autoconf automake
 
 #### Boost
 
-Download latest version of Boost library from [boost.org](http://www.boost.org/). Suppose the package is `$WORK/boost_1_54_0.tar.gz`. Install it with the following steps.
+Download latest version of Boost library from [boost.org](http://www.boost.org/). Suppose the package is `$WORK/boost_1_54_0.tar.gz`.
 
 ```bash
 $ cd $WORK
@@ -38,7 +38,7 @@ $ sudo ./b2 install
 
 #### GIZA++
 
-Download the latest version of [GIZA++](https://code.google.com/p/giza-pp/). Suppose the package is `$WORK/giza-pp-v1.0.7.tar.gz`. Install it with the following steps.
+Download the latest version of [GIZA++](https://code.google.com/p/giza-pp/). Suppose the package is `$WORK/giza-pp-v1.0.7.tar.gz`.
 
 ```bash
 $ cd $WORK
@@ -51,7 +51,7 @@ $ sudo cp GIZA++-v2/{GIZA++,snt2cooc.out} mkcls-v2/mkcls $TRANSLATION/giza-pp/bi
 
 #### SRILM
 
-Download the latest version of [SRILM](http://www.speech.sri.com/projects/srilm/). Suppose the package is `$WORK/srilm.tgz`. Install it with the following steps.
+Download the latest version of [SRILM](http://www.speech.sri.com/projects/srilm/). Suppose the package is `$WORK/srilm.tgz`.
 
 ```bash
 $ cd $WORK
@@ -66,7 +66,7 @@ $ sudo ln -s lib/macosx lib64
 
 #### IRSTLM
 
-Download the latest version of [IRSTLM](http://hlt.fbk.eu/en/irstlm). Suppose the package is `$WORK/irstlm-5.80.03.tgz`. Install it with the following steps.
+Download the latest version of [IRSTLM](http://hlt.fbk.eu/en/irstlm). Suppose the package is `$WORK/irstlm-5.80.03.tgz`.
 
 ```bash
 $ cd $WORK
@@ -147,4 +147,24 @@ As of release 1.0, Moses supports only one translation system per OS process. Af
 
 A patch shipped with moses.js provides an enhancement that allows users to create and destroy translation systems on demand. This is especially useful for a Node.js server that runs for an extended period of time, and is expected to update its translation system dynamically (e.g., as result of a user request or service update). The patch also enables loading multiple translation systems at the same time, and selecting one of them for use with any given translation task.
 
-To apply the patch, download it from moses.js' github server
+To apply the patch, download [the latest version from moses.js' github server](https://raw.github.com/tfeng/moses/master/patches/moses-1.0.patch). Suppose the patch file is saved at `$WORK/moses-1.0.patch`.
+
+```bash
+$ cd $WORK/mosesdecoder-RELEASE-1.0
+$ patch -p1 < ../moses-1.0.patch
+$ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv -lboost_program_options" install
+```
+
+This will rebuild Moses and reinstall it in `$TRANSLATION/moses`. After this, it is recommended to return to [Testing Moses](#testing-moses) to test moses again. The patch also modifies the main `moses` program so that it runs in the legacy single-translation-system mode, instead of the enhanced multi-translation-system mode.
+
+#### Installing moses.js
+
+Install latest release of moses.js from [npm](https://npmjs.org/package/moses).
+
+```bash
+$ cd $WORK
+$ mkdir test-moses-js
+$ . $TRANSLATION/setenv.sh
+$ npm install moses
+$ node node_modules/moses/sample/test-phrase-model.js
+```
