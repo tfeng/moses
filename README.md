@@ -5,7 +5,7 @@ moses.js
 
 [Moses](http://www.statmt.org/moses/) is a statistical machine translation system written in C++. This module enables usage of Moses in Node.js using the JavaScript language. In addition, it also adds the capability of loading multiple translation systems into the same node process. This means the same process (or web server built with node and [express](http://expressjs.com/)) can hold multiple distinctly different translation models (e.g., Chinese to English in IT and English to French in medicine) at the same time, and be able to use those models to translate user-given sentences or paragraphs on-demand.
 
-Preparation
+Moses Installation
 ----------
 
 The installation process is a little tricky, because this module depends on Moses, and Moses has a few dependencies. The instructions below originally come from Moses' [Moses Installation and Training Run-Through](http://www.statmt.org/moses_steps.html) page.
@@ -124,7 +124,7 @@ Put this file in `$TRANSLATION/setenv.sh`. With this, each time a new command-li
 $ . $TRANSLATION/setenv.sh
 ```
 
-#### Test
+#### Testing Moses
 
 Download Moses' [sample models package](http://www.statmt.org/moses/download/sample-models.tgz). Suppose the package is `$WORK/sample-models.tgz`.
 
@@ -137,3 +137,14 @@ $ moses -f phrase-model/moses.ini < phrase-model/in
 ```
 
 If all is set up correctly, near the end of the output, there should be a line containing text `BEST TRANSLATION: this is a small house`.
+
+moses.js Installation
+----------
+
+#### Patching Moses
+
+As of release 1.0, Moses supports only one translation system per OS process. After the system is initialized, all subsequent translation must be performed in the same system. Though advanced features such as [Using Multiple Translation Systems in the Same Server](http://www.statmt.org/moses/?n=Moses.AdvancedFeatures#ntoc29) and [Alternate Weight Settings](http://www.statmt.org/moses/?n=Moses.AdvancedFeatures#ntoc52) allow users to have multiple translation tables, all those tables must be loaded at the same time, and once loaded, they cannot be changed in the entire life of the process.
+
+A patch shipped with moses.js provides an enhancement that allows users to create and destroy translation systems on demand. This is especially useful for a Node.js server that runs for an extended period of time, and is expected to update its translation system dynamically (e.g., as result of a user request or service update). The patch also enables loading multiple translation systems at the same time, and selecting one of them for use with any given translation task.
+
+To apply the patch, download it from moses.js' github server
