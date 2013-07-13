@@ -227,4 +227,3 @@ Persistent<FunctionTemplate> Moses::constructor;
 
 NODE_MODULE(Moses, InitModule)
 }
-
