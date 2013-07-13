@@ -157,6 +157,17 @@ $ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm 
 
 This will rebuild Moses and reinstall it in `$TRANSLATION/moses`. After this, it is recommended to return to [Testing Moses](#testing-moses) to test moses again. The patch also modifies the main `moses` program so that it runs in the legacy single-translation-system mode, instead of the enhanced multi-translation-system mode.
 
+#### Install Moses header files
+
+Moses installation does not include header files required for building moses.js. Those files need to be manually copied to the installation directory.
+
+```bash
+$ sudo rm -rf $TRANSLATION/moses/include
+$ sudo mkdir $TRANSLATION/moses/include
+$ sudo cp -R $WORK/mosesdecoder-RELEASE-1.0/headers-moses $TRANSLATION/moses/include/moses
+$ sudo cp -R $WORK/mosesdecoder-RELEASE-1.0/headers-base/* $TRANSLATION/moses/include/
+```
+
 #### Installing moses.js
 
 Install latest release of moses.js from [npm](https://npmjs.org/package/moses).
@@ -167,4 +178,19 @@ $ mkdir test-moses-js
 $ . $TRANSLATION/setenv.sh
 $ npm install moses
 $ node node_modules/moses/sample/test-phrase-model.js
+> Defined parameters (per moses.ini or switch):
+	config: phrase-model/moses.ini 
+	input-factors: 0 
+	lmodel-file: 8 0 3 lm/europarl.srilm.gz 
+	mapping: T 0 
+	n-best-list: nbest.txt 100 
+	ttable-file: 0 0 0 1 phrase-model/phrase-table 
+	ttable-limit: 10 
+	weight-d: 1 
+	weight-l: 1 
+	weight-t: 1 
+	weight-w: 0 
+Overwriting parameter verbose (the parameter does not have previous values) with the following values: 0
+Started.
+> this is a small house
 ```
