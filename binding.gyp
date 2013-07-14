@@ -3,12 +3,14 @@
     "BOOST": "$(BOOST)",
     "MOSES": "$(MOSES)",
     "SRILM": "$(SRILM)",
-    "SRILM_LIB": "<(SRILM)/lib",
+    "IRSTLM": "$(IRSTLM)",
     "MAX_NUM_FACTORS": "4",
     "BOOST_INCLUDE": "<(BOOST)/include",
     "BOOST_LIB": "<(BOOST)/lib",
     "MOSES_INCLUDE": "<(MOSES)/include",
-    "MOSES_LIB": "<(MOSES)/lib"
+    "MOSES_LIB": "<(MOSES)/lib",
+    "SRILM_LIB": "<(SRILM)/lib",
+    "IRSTLM_LIB": "<(IRSTLM)/lib"
   },
   "targets": [
     {
@@ -31,7 +33,8 @@
           "link_settings": {
             "libraries": ["-L<(BOOST_LIB)", "-lboost_system", "-lboost_thread",
                           "-L<(MOSES_LIB)", "-lmoses", "-lmert_lib", "-lmira_lib", "-lpcfg_common",
-                          "-L<(SRILM_LIB)", "-ldstruct", "-lflm", "-llattice", "-loolm", "-lmisc"]
+                          "-L<(SRILM_LIB)", "-ldstruct", "-lflm", "-llattice", "-loolm", "-lmisc",
+                          "-L<(IRSTLM_LIB)", "-lirstlm"]
           },
           "defines": ["MAX_NUM_FACTORS=<(MAX_NUM_FACTORS)", "null=NULL"]
         }],

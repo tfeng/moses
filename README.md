@@ -57,11 +57,17 @@ Download the latest version of [SRILM](http://www.speech.sri.com/projects/srilm/
 $ cd $WORK
 $ mkdir srilm
 $ tar -zxvf srilm.tgz -C srilm
+$ cd srilm
 $ env SRILM=`pwd` make
 $ sudo mkdir $TRANSLATION/srilm
 $ sudo cp -r {bin,include,lib} $TRANSLATION/srilm
+```
+
+SRILM build tool puts compiled libraries in `$TRANSLATION/srilm/lib/$SRILM_ARCH`, where `SRILM_ARCH` is an architecture-specific name, such as `macosx` for Mac and `i686-m64` for 64-bit Linux. For Moses build, however, the library must be located at `$TRANSLATION/srilm/lib64` for 64-bit systems. Therefore, perform the following steps to create the necessary symlink.
+
+```bash
 $ cd $TRANSLATION/srilm
-$ sudo ln -s lib/macosx lib64
+$ sudo ln -s lib/* lib64
 ```
 
 #### IRSTLM
@@ -71,6 +77,7 @@ Download the latest version of [IRSTLM](http://hlt.fbk.eu/en/irstlm). Suppose th
 ```bash
 $ cd $WORK
 $ tar -zxvf irstlm-5.80.03.tgz
+$ cd irstlm-5.80.03
 $ ./regenerate-makefiles.sh
 $ ./configure --prefix=$TRANSLATION/irstlm
 $ make
@@ -91,31 +98,34 @@ $ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm 
 
 #### Environment
 
-The following script sets up the environment for running the command-line tools.
+The following script sets up the environment for running the command-line tools. (Set variables `WORK` and `TRANSLATION` in this script according to your specific configuration.)
 
 ```bash
 #!/bin/sh
 
-where=$TRANSLATION
+export WORK=$HOME/translation
+export TRANSLATION=/opt/translation
 
-DYLD_LIBRARY_PATH=
-for lib in $where/*/lib; do
-  if [ x"$DYLD_LIBRARY_PATH" == x ]; then
-    DYLD_LIBRARY_PATH=$lib
+LD_LIBRARY_PATH=
+for lib in $TRANSLATION/*/lib; do
+  if [ x"$LD_LIBRARY_PATH" == x ]; then
+    LD_LIBRARY_PATH=$lib
   else
-    DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$lib
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$lib
   fi
 done
-export DYLD_LIBRARY_PATH
+export LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=LD_LIBRARY_PATH
 
-for bin in $where/*/bin $where/*/bin/macosx; do
+for bin in $TRANSLATION/*/bin `find srilm/bin/* -type d`; do
   PATH=$bin:$PATH
 done
 export PATH
 
-export BOOST=$where/boost
-export MOSES=$where/moses
-export SRILM=$where/srilm
+export BOOST=$TRANSLATION/boost
+export MOSES=$TRANSLATION/moses
+export SRILM=$TRANSLATION/srilm
+export IRSTLM=$TRANSLATION/irstlm
 ```
 
 Put this file in `$TRANSLATION/setenv.sh`. With this, each time a new command-line console is open, execute the following command to set up.

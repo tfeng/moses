@@ -528,16 +528,21 @@ index 0000000..fe27400
 +
 +#endif
 diff --git a/moses/Util.h b/moses/Util.h
-index 6f485a6..237a0c0 100644
+index 6f485a6..ab8c44e 100644
 --- a/moses/Util.h
 +++ b/moses/Util.h
-@@ -32,9 +32,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+@@ -32,12 +32,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  #include <map>
  #include <cstdlib>
  #include <cstring>
 +#include <exception>
  #include "util/check.hh"
  #include "TypeDef.h"
+ 
++#define abort() do { throw Moses::UnknownException(); } while (false)
++
+ namespace Moses
+ {
  
 +class UnknownException : public std::exception {
 +public:
@@ -546,8 +551,6 @@ index 6f485a6..237a0c0 100644
 +  }
 +};
 +
-+#define abort() do { throw UnknownException(); } while (false)
-+
- namespace Moses
- {
- 
+ /** Outputting debugging/verbose information to stderr.
+  * Use TRACE_ENABLE flag to redirect tracing output into oblivion
+  * so that you can output your own ad-hoc debugging info.
