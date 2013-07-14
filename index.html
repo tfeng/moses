@@ -1,70 +1,242 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>moses.js by tfeng</title>
-
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <title>moses.js by tfeng</title>
   </head>
+
   <body>
-    <div class="wrapper">
-      <header>
-        <h1>moses.js</h1>
-        <p>Moses Statistical Machine Translation (SMT) library for Node.js</p>
-        <p class="view"><a href="https://github.com/tfeng/moses">View the Project on GitHub <small>tfeng/moses</small></a></p>
-        <ul>
-          <li><a href="https://github.com/tfeng/moses/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/tfeng/moses/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/tfeng/moses">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+    <div id="container">
+      <div class="inner">
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+        <header>
+          <h1>moses.js</h1>
+          <h2>Moses Statistical Machine Translation (SMT) library for Node.js</h2>
+        </header>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/tfeng/moses/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/tfeng/moses/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/tfeng/moses" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a name="mosesjs" class="anchor" href="#mosesjs"><span class="octicon octicon-link"></span></a>moses.js</h1>
 
 <h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<a name="moses-statistical-machine-translation-smt-library-for-nodejs" class="anchor" href="#moses-statistical-machine-translation-smt-library-for-nodejs"><span class="octicon octicon-link"></span></a>Moses Statistical Machine Translation (SMT) library for Node.js</h3>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p><a href="http://www.statmt.org/moses/">Moses</a> is a statistical machine translation system written in C++. This module enables usage of Moses in Node.js using the JavaScript language. In addition, it also adds the capability of loading multiple translation systems into the same node process. This means the same process (or web server built with node and <a href="http://expressjs.com/">express</a>) can hold multiple distinctly different translation models (e.g., Chinese to English in IT and English to French in medicine) at the same time, and be able to use those models to translate user-given sentences or paragraphs on-demand.</p>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<h2>
+<a name="moses-installation" class="anchor" href="#moses-installation"><span class="octicon octicon-link"></span></a>Moses Installation</h2>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
-
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
-
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<p>The installation process is a little tricky, because this module depends on Moses, and Moses has a few dependencies. The instructions below originally come from Moses' <a href="http://www.statmt.org/moses_steps.html">Moses Installation and Training Run-Through</a> page.</p>
 
 <h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<a name="mac-osx" class="anchor" href="#mac-osx"><span class="octicon octicon-link"></span></a>Mac OSX</h3>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-      </section>
+<p>Supposing <code>$WORK</code> (which may be set to <code>$HOME/translation</code>) is the directory to hold source and build files, and <code>$TRANSLATION</code> (which may be set to <code>/opt/translation</code>) is the directory where executables, libraries and header files are to be stored.</p>
+
+<p>Before proceeding, Xcode must be installed. After installing Xcode, launch it, and install <code>Command Line Tools</code> in <code>Xcode -&gt; Preferences -&gt; Downloads -&gt; Components tab</code>. This will provide the standard build tool for command line usage (with some modifications).</p>
+
+<h4>
+<a name="macports" class="anchor" href="#macports"><span class="octicon octicon-link"></span></a>MacPorts</h4>
+
+<p><a href="http://www.macports.org/">MacPorts</a> is provides additional necessary build tools. After installing MacPorts, install autoconf and automake.</p>
+
+<div class="highlight"><pre><span class="nv">$ </span>sudo /opt/local/bin/port install autoconf automake
+</pre></div>
+
+<h4>
+<a name="boost" class="anchor" href="#boost"><span class="octicon octicon-link"></span></a>Boost</h4>
+
+<p>Download latest version of Boost library from <a href="http://www.boost.org/">boost.org</a>. Suppose the package is <code>$WORK/boost_1_54_0.tar.gz</code>.</p>
+
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd</span> <span class="nv">$WORK</span>
+<span class="nv">$ </span>tar -zxvf boost_1_54_0.tar.gz
+<span class="nv">$ </span><span class="nb">cd </span>boost_1_54_0
+<span class="nv">$ </span>./bootstrap.sh --prefix<span class="o">=</span><span class="nv">$TRANSLATION</span>/boost
+<span class="nv">$ </span>sudo ./b2 install
+</pre></div>
+
+<h4>
+<a name="giza" class="anchor" href="#giza"><span class="octicon octicon-link"></span></a>GIZA++</h4>
+
+<p>Download the latest version of <a href="https://code.google.com/p/giza-pp/">GIZA++</a>. Suppose the package is <code>$WORK/giza-pp-v1.0.7.tar.gz</code>.</p>
+
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd</span> <span class="nv">$WORK</span>
+<span class="nv">$ </span>tar -zxvf giza-pp-v1.0.7.tar.gz
+<span class="nv">$ </span><span class="nb">cd </span>giza-pp
+<span class="nv">$ </span>make
+<span class="nv">$ </span>sudo mkdir -p <span class="nv">$TRANSLATION</span>/giza-pp/bin
+<span class="nv">$ </span>sudo cp GIZA++-v2/<span class="o">{</span>GIZA++,snt2cooc.out<span class="o">}</span> mkcls-v2/mkcls <span class="nv">$TRANSLATION</span>/giza-pp/bin
+</pre></div>
+
+<h4>
+<a name="srilm" class="anchor" href="#srilm"><span class="octicon octicon-link"></span></a>SRILM</h4>
+
+<p>Download the latest version of <a href="http://www.speech.sri.com/projects/srilm/">SRILM</a>. Suppose the package is <code>$WORK/srilm.tgz</code>.</p>
+
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd</span> <span class="nv">$WORK</span>
+<span class="nv">$ </span>mkdir srilm
+<span class="nv">$ </span>tar -zxvf srilm.tgz -C srilm
+<span class="nv">$ </span>env <span class="nv">SRILM</span><span class="o">=</span><span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span> make
+<span class="nv">$ </span>sudo mkdir <span class="nv">$TRANSLATION</span>/srilm
+<span class="nv">$ </span>sudo cp -r <span class="o">{</span>bin,include,lib<span class="o">}</span> <span class="nv">$TRANSLATION</span>/srilm
+<span class="nv">$ </span><span class="nb">cd</span> <span class="nv">$TRANSLATION</span>/srilm
+<span class="nv">$ </span>sudo ln -s lib/macosx lib64
+</pre></div>
+
+<h4>
+<a name="irstlm" class="anchor" href="#irstlm"><span class="octicon octicon-link"></span></a>IRSTLM</h4>
+
+<p>Download the latest version of <a href="http://hlt.fbk.eu/en/irstlm">IRSTLM</a>. Suppose the package is <code>$WORK/irstlm-5.80.03.tgz</code>.</p>
+
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd</span> <span class="nv">$WORK</span>
+<span class="nv">$ </span>tar -zxvf irstlm-5.80.03.tgz
+<span class="nv">$ </span>./regenerate-makefiles.sh
+<span class="nv">$ </span>./configure --prefix<span class="o">=</span><span class="nv">$TRANSLATION</span>/irstlm
+<span class="nv">$ </span>make
+<span class="nv">$ </span>sudo make install
+</pre></div>
+
+<h4>
+<a name="moses" class="anchor" href="#moses"><span class="octicon octicon-link"></span></a>Moses</h4>
+
+<p>Download <a href="https://github.com/moses-smt/mosesdecoder/tree/RELEASE-1.0">Moses release 1.0</a> (with the Download ZIP button). Suppose the package is <code>$WORK/mosesdecoder-RELEASE-1.0.zip</code>.</p>
+
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd</span> <span class="nv">$WORK</span>
+<span class="nv">$ </span>unzip mosesdecoder-RELEASE-1.0.zip
+<span class="nv">$ </span><span class="nb">cd </span>mosesdecoder-RELEASE-1.0
+<span class="nv">$ </span>./bjam --with-srilm<span class="o">=</span><span class="nv">$TRANSLATION</span>/srilm --with-irstlm<span class="o">=</span><span class="nv">$TRANSLATION</span>/irstlm --with-giza<span class="o">=</span><span class="nv">$TRANSLATION</span>/giza-pp --with-boost<span class="o">=</span><span class="nv">$TRANSLATION</span>/boost --prefix<span class="o">=</span><span class="nv">$TRANSLATION</span>/moses -j2 -sLDFLAGS<span class="o">=</span><span class="s2">"-liconv -lboost_program_options"</span>
+<span class="nv">$ </span>sudo ./bjam --with-srilm<span class="o">=</span><span class="nv">$TRANSLATION</span>/srilm --with-irstlm<span class="o">=</span><span class="nv">$TRANSLATION</span>/irstlm --with-giza<span class="o">=</span><span class="nv">$TRANSLATION</span>/giza-pp --with-boost<span class="o">=</span><span class="nv">$TRANSLATION</span>/boost --prefix<span class="o">=</span><span class="nv">$TRANSLATION</span>/moses -j2 -sLDFLAGS<span class="o">=</span><span class="s2">"-liconv -lboost_program_options"</span> install
+</pre></div>
+
+<h4>
+<a name="environment" class="anchor" href="#environment"><span class="octicon octicon-link"></span></a>Environment</h4>
+
+<p>The following script sets up the environment for running the command-line tools.</p>
+
+<div class="highlight"><pre><span class="c">#!/bin/sh</span>
+
+<span class="nv">where</span><span class="o">=</span><span class="nv">$TRANSLATION</span>
+
+<span class="nv">DYLD_LIBRARY_PATH</span><span class="o">=</span>
+<span class="k">for </span>lib in <span class="nv">$where</span>/*/lib; <span class="k">do</span>
+<span class="k">  if</span> <span class="o">[</span> x<span class="s2">"$DYLD_LIBRARY_PATH"</span> <span class="o">==</span> x <span class="o">]</span>; <span class="k">then</span>
+<span class="k">    </span><span class="nv">DYLD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$lib</span>
+  <span class="k">else</span>
+<span class="k">    </span><span class="nv">DYLD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$DYLD_LIBRARY_PATH</span>:<span class="nv">$lib</span>
+  <span class="k">fi</span>
+<span class="k">done</span>
+<span class="nb">export </span>DYLD_LIBRARY_PATH
+
+<span class="k">for </span>bin in <span class="nv">$where</span>/*/bin <span class="nv">$where</span>/*/bin/macosx; <span class="k">do</span>
+<span class="k">  </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$bin</span>:<span class="nv">$PATH</span>
+<span class="k">done</span>
+<span class="nb">export </span>PATH
+
+<span class="nb">export </span><span class="nv">BOOST</span><span class="o">=</span><span class="nv">$where</span>/boost
+<span class="nb">export </span><span class="nv">MOSES</span><span class="o">=</span><span class="nv">$where</span>/moses
+<span class="nb">export </span><span class="nv">SRILM</span><span class="o">=</span><span class="nv">$where</span>/srilm
+</pre></div>
+
+<p>Put this file in <code>$TRANSLATION/setenv.sh</code>. With this, each time a new command-line console is open, execute the following command to set up.</p>
+
+<div class="highlight"><pre><span class="nv">$ </span>. <span class="nv">$TRANSLATION</span>/setenv.sh
+</pre></div>
+
+<h4>
+<a name="testing-moses" class="anchor" href="#testing-moses"><span class="octicon octicon-link"></span></a>Testing Moses</h4>
+
+<p>Download Moses' <a href="http://www.statmt.org/moses/download/sample-models.tgz">sample models package</a>. Suppose the package is <code>$WORK/sample-models.tgz</code>.</p>
+
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd</span> <span class="nv">$WORK</span>
+<span class="nv">$ </span>tar -zxvf sample-models.tgz
+<span class="nv">$ </span><span class="nb">cd </span>sample-models
+<span class="nv">$ </span>. <span class="nv">$TRANSLATION</span>/setenv.sh
+<span class="nv">$ </span>moses -f phrase-model/moses.ini &lt; phrase-model/in
+</pre></div>
+
+<p>If all is set up correctly, near the end of the output, there should be a line containing text <code>BEST TRANSLATION: this is a small house</code>.</p>
+
+<h2>
+<a name="mosesjs-installation" class="anchor" href="#mosesjs-installation"><span class="octicon octicon-link"></span></a>moses.js Installation</h2>
+
+<h4>
+<a name="patching-moses" class="anchor" href="#patching-moses"><span class="octicon octicon-link"></span></a>Patching Moses</h4>
+
+<p>As of release 1.0, Moses supports only one translation system per OS process. After the system is initialized, all subsequent translation must be performed in the same system. Though advanced features such as <a href="http://www.statmt.org/moses/?n=Moses.AdvancedFeatures#ntoc29">Using Multiple Translation Systems in the Same Server</a> and <a href="http://www.statmt.org/moses/?n=Moses.AdvancedFeatures#ntoc52">Alternate Weight Settings</a> allow users to have multiple translation tables, all those tables must be loaded at the same time, and once loaded, they cannot be changed in the entire life of the process.</p>
+
+<p>A patch shipped with moses.js provides an enhancement that allows users to create and destroy translation systems on demand. This is especially useful for a Node.js server that runs for an extended period of time, and is expected to update its translation system dynamically (e.g., as result of a user request or service update). The patch also enables loading multiple translation systems at the same time, and selecting one of them for use with any given translation task.</p>
+
+<p>To apply the patch, download <a href="https://raw.github.com/tfeng/moses/master/patches/moses-1.0.patch">the latest version from moses.js' github server</a>. Suppose the patch file is saved at <code>$WORK/moses-1.0.patch</code>.</p>
+
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd</span> <span class="nv">$WORK</span>/mosesdecoder-RELEASE-1.0
+<span class="nv">$ </span>patch -p1 &lt; ../moses-1.0.patch
+<span class="nv">$ </span>sudo ./bjam --with-srilm<span class="o">=</span><span class="nv">$TRANSLATION</span>/srilm --with-irstlm<span class="o">=</span><span class="nv">$TRANSLATION</span>/irstlm --with-giza<span class="o">=</span><span class="nv">$TRANSLATION</span>/giza-pp --with-boost<span class="o">=</span><span class="nv">$TRANSLATION</span>/boost --prefix<span class="o">=</span><span class="nv">$TRANSLATION</span>/moses -j2 -sLDFLAGS<span class="o">=</span><span class="s2">"-liconv -lboost_program_options"</span> install
+</pre></div>
+
+<p>This will rebuild Moses and reinstall it in <code>$TRANSLATION/moses</code>. After this, it is recommended to return to <a href="#testing-moses">Testing Moses</a> to test moses again. The patch also modifies the main <code>moses</code> program so that it runs in the legacy single-translation-system mode, instead of the enhanced multi-translation-system mode.</p>
+
+<h4>
+<a name="install-moses-header-files" class="anchor" href="#install-moses-header-files"><span class="octicon octicon-link"></span></a>Install Moses header files</h4>
+
+<p>Moses installation does not include header files required for building moses.js. Those files need to be manually copied to the installation directory.</p>
+
+<div class="highlight"><pre><span class="nv">$ </span>sudo rm -rf <span class="nv">$TRANSLATION</span>/moses/include
+<span class="nv">$ </span>sudo mkdir <span class="nv">$TRANSLATION</span>/moses/include
+<span class="nv">$ </span>sudo cp -R <span class="nv">$WORK</span>/mosesdecoder-RELEASE-1.0/headers-moses <span class="nv">$TRANSLATION</span>/moses/include/moses
+<span class="nv">$ </span>sudo cp -R <span class="nv">$WORK</span>/mosesdecoder-RELEASE-1.0/headers-base/* <span class="nv">$TRANSLATION</span>/moses/include/
+</pre></div>
+
+<h4>
+<a name="installing-mosesjs" class="anchor" href="#installing-mosesjs"><span class="octicon octicon-link"></span></a>Installing moses.js</h4>
+
+<p>Install latest release of moses.js from <a href="https://npmjs.org/package/moses">npm</a>.</p>
+
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd</span> <span class="nv">$WORK</span>
+<span class="nv">$ </span>mkdir <span class="nb">test</span>-moses-js
+<span class="nv">$ </span>. <span class="nv">$TRANSLATION</span>/setenv.sh
+<span class="nv">$ </span>npm install moses
+<span class="nv">$ </span>node node_modules/moses/sample/test-phrase-model.js
+&gt; Defined parameters <span class="o">(</span>per moses.ini or switch<span class="o">)</span>:
+    config: phrase-model/moses.ini 
+    input-factors: 0 
+    lmodel-file: 8 0 3 lm/europarl.srilm.gz 
+    mapping: T 0 
+    n-best-list: nbest.txt 100 
+    ttable-file: 0 0 0 1 phrase-model/phrase-table 
+    ttable-limit: 10 
+    weight-d: 1 
+    weight-l: 1 
+    weight-t: 1 
+    weight-w: 0 
+Overwriting parameter verbose <span class="o">(</span>the parameter does not have previous values<span class="o">)</span> with the following values: 0
+Started.
+&gt; this is a small house
+</pre></div>
+        </section>
+
+        <footer>
+          moses.js is maintained by <a href="https://github.com/tfeng">tfeng</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
     </div>
-    <footer>
-      <p>Project maintained by <a href="https://github.com/tfeng">tfeng</a></p>
-      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
-    </footer>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-    
   </body>
 </html>
