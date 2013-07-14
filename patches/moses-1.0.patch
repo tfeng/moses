@@ -527,3 +527,27 @@ index 0000000..fe27400
 +}
 +
 +#endif
+diff --git a/moses/Util.h b/moses/Util.h
+index 6f485a6..237a0c0 100644
+--- a/moses/Util.h
++++ b/moses/Util.h
+@@ -32,9 +32,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ #include <map>
+ #include <cstdlib>
+ #include <cstring>
++#include <exception>
+ #include "util/check.hh"
+ #include "TypeDef.h"
+ 
++class UnknownException : public std::exception {
++public:
++  virtual const char* what() const throw() {
++    return "Unknown exception.";
++  }
++};
++
++#define abort() do { throw UnknownException(); } while (false)
++
+ namespace Moses
+ {
+ 

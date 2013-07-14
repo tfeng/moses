@@ -19,10 +19,14 @@ void InitSync(uv_work_t* req) {
   InitPayload* payload = (InitPayload*) req->data;
 
   OptionsParameter* params = new OptionsParameter();
-  if (!params->LoadParam(payload->configFile)) {
-    payload->error = "Unable to load file " + payload->configFile;
-    delete params;
-    return;
+  try {
+    if (!params->LoadParam(payload->configFile)) {
+      payload->error = "Unable to load config file " + payload->configFile;
+      delete params;
+      return;
+    }
+  } catch (exception const & ex) {
+    payload->error = string("Unable to load config file. Reason: ") + ex.what();
   }
 
   string result = payload->options->OverwriteParams(*params);
@@ -37,7 +41,7 @@ void InitSync(uv_work_t* req) {
   try {
     StaticData::InstanceNonConst().LoadData(params);
   } catch (exception const & ex) {
-    payload->error = string("Unable to load static data: ") + ex.what();
+    payload->error = string("Unable to load static data. Reason: ") + ex.what();
   }
 
   *(payload->threadDataPtr) = ThreadedStaticHelper::GetThreadData();
