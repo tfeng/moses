@@ -92,8 +92,8 @@ Download [Moses release 1.0](https://github.com/moses-smt/mosesdecoder/tree/RELE
 $ cd $WORK
 $ unzip mosesdecoder-RELEASE-1.0.zip
 $ cd mosesdecoder-RELEASE-1.0
-$ ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv -lboost_program_options"
-$ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv -lboost_program_options" install
+$ ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv"
+$ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv" install
 ```
 
 #### Environment
@@ -115,9 +115,9 @@ for lib in $TRANSLATION/*/lib; do
   fi
 done
 export LD_LIBRARY_PATH
-export DYLD_LIBRARY_PATH=LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
-for bin in $TRANSLATION/*/bin `find srilm/bin/* -type d`; do
+for bin in $TRANSLATION/*/bin `find $TRANSLATION/srilm/bin/* -type d`; do
   PATH=$bin:$PATH
 done
 export PATH
@@ -162,7 +162,7 @@ To apply the patch, download [the latest version from moses.js' github server](h
 ```bash
 $ cd $WORK/mosesdecoder-RELEASE-1.0
 $ patch -p1 < ../moses-1.0.patch
-$ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv -lboost_program_options" install
+$ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv" install
 ```
 
 This will rebuild Moses and reinstall it in `$TRANSLATION/moses`. After this, it is recommended to return to [Testing Moses](#testing-moses) to test moses again. The patch also modifies the main `moses` program so that it runs in the legacy single-translation-system mode, instead of the enhanced multi-translation-system mode.
@@ -186,6 +186,7 @@ Install latest release of moses.js from [npm](https://npmjs.org/package/moses).
 $ cd $WORK
 $ mkdir test-moses-js
 $ . $TRANSLATION/setenv.sh
+$ cd test-moses-js
 $ npm install moses
 $ node node_modules/moses/sample/test-phrase-model.js
 > Defined parameters (per moses.ini or switch):
