@@ -1,7 +1,7 @@
 {
   "name": "moses",
   "id": "moses",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Moses Statistical Machine Translation (SMT) library for Node.js",
   "keywords": [
     "moses",
