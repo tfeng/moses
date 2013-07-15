@@ -10,15 +10,15 @@ Moses Installation
 
 The installation process is a little tricky, because this module depends on Moses, and Moses has a few dependencies. The instructions below originally come from Moses' [Moses Installation and Training Run-Through](http://www.statmt.org/moses_steps.html) page.
 
-### Mac OSX
+### Linux / Mac OSX
 
 Supposing `$WORK` (which may be set to `$HOME/translation`) is the directory to hold source and build files, and `$TRANSLATION` (which may be set to `/opt/translation`) is the directory where executables, libraries and header files are to be stored.
 
 Before proceeding, Xcode must be installed. After installing Xcode, launch it, and install `Command Line Tools` in `Xcode -> Preferences -> Downloads -> Components tab`. This will provide the standard build tool for command line usage (with some modifications).
 
-#### MacPorts
+#### Mac OSX Only: MacPorts
 
-[MacPorts](http://www.macports.org/) is provides additional necessary build tools. After installing MacPorts, install autoconf and automake.
+[MacPorts](http://www.macports.org/) provides additional necessary build tools for Mac OSX. After installing MacPorts, install autoconf and automake.
 
 ```bash
 $ sudo /opt/local/bin/port install autoconf automake
@@ -53,12 +53,14 @@ $ sudo cp GIZA++-v2/{GIZA++,snt2cooc.out} mkcls-v2/mkcls $TRANSLATION/giza-pp/bi
 
 Download the latest version of [SRILM](http://www.speech.sri.com/projects/srilm/). Suppose the package is `$WORK/srilm.tgz`.
 
+> *OS Specific:* In **Linux**, the build process of SRILM, IRSTLM and Moses below requires the `-fPIC` parameter for GCC and G++ so that the source is built with [position independent code](http://en.wikipedia.org/wiki/Position-independent_code). The `MAKE_PIC=1` environment variable below is set for this purpose. It is not required for **Mac OSX**.
+
 ```bash
 $ cd $WORK
 $ mkdir srilm
 $ tar -zxvf srilm.tgz -C srilm
 $ cd srilm
-$ env SRILM=`pwd` make
+$ MAKE_PIC=1 SRILM=`pwd` make
 $ sudo mkdir $TRANSLATION/srilm
 $ sudo cp -r {bin,include,lib} $TRANSLATION/srilm
 ```
@@ -79,21 +81,33 @@ $ cd $WORK
 $ tar -zxvf irstlm-5.80.03.tgz
 $ cd irstlm-5.80.03
 $ ./regenerate-makefiles.sh
-$ ./configure --prefix=$TRANSLATION/irstlm
+$ ./configure --prefix=$TRANSLATION/irstlm CFLAGS=-fPIC CXXFLAGS=-fPIC
 $ make
 $ sudo make install
 ```
 
 #### Moses
 
-Download [Moses release 1.0](https://github.com/moses-smt/mosesdecoder/tree/RELEASE-1.0) (with the Download ZIP button). Suppose the package is `$WORK/mosesdecoder-RELEASE-1.0.zip`.
+Download [Moses release 1.0](https://github.com/moses-smt/mosesdecoder/tree/RELEASE-1.0) (with the Download ZIP button). Suppose the package is `$WORK/mosesdecoder-RELEASE-1.0.zip`. 
+
 
 ```bash
 $ cd $WORK
 $ unzip mosesdecoder-RELEASE-1.0.zip
 $ cd mosesdecoder-RELEASE-1.0
-$ ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv"
-$ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv" install
+$ ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv" link=shared
+```
+
+For **Max OSX**:
+
+```bash
+$ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv -lboost_program_options" install
+```
+
+For **Linux**:
+
+```bash
+$ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 link=shared install
 ```
 
 #### Environment
@@ -162,7 +176,18 @@ To apply the patch, download [the latest version from moses.js' github server](h
 ```bash
 $ cd $WORK/mosesdecoder-RELEASE-1.0
 $ patch -p1 < ../moses-1.0.patch
-$ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv" install
+```
+
+For **Mac OSX**:
+
+```bash
+$ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 -sLDFLAGS="-liconv -lboost_program_options" install
+```
+
+For **Linux**:
+
+```bash
+$ sudo ./bjam --with-srilm=$TRANSLATION/srilm --with-irstlm=$TRANSLATION/irstlm --with-giza=$TRANSLATION/giza-pp --with-boost=$TRANSLATION/boost --prefix=$TRANSLATION/moses -j2 link=shared install
 ```
 
 This will rebuild Moses and reinstall it in `$TRANSLATION/moses`. After this, it is recommended to return to [Testing Moses](#testing-moses) to test moses again. The patch also modifies the main `moses` program so that it runs in the legacy single-translation-system mode, instead of the enhanced multi-translation-system mode.
